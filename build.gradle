@@ -24,7 +24,7 @@ apply from: 'https://raw.githubusercontent.com/akhikhl/gretty/master/pluginScrip
 apply plugin: 'docker-compose'
 
 group = 'org.opendatakit'
-version = "2.0.5.2" //getVersionName()
+version = "2.0.5.3" //getVersionName()
 description = "Moda Aggregate Server"
 
 sourceCompatibility = 1.8
@@ -171,7 +171,7 @@ gretty {
 
 buildConfig {
   appName = 'ODK Aggregate'
-  version = version
+  version = getVersionName()
   clsName = 'BuildConfig'
   packageName = 'org.opendatakit.aggregate.buildconfig'
 }
