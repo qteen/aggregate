@@ -88,6 +88,7 @@
     <intercept-url pattern="/xformsDownload" access="hasRole('ROLE_DATA_COLLECTOR') or hasRole('ROLE_DATA_VIEWER')"/>
     <intercept-url pattern="/xformsList" access="hasRole('ROLE_DATA_COLLECTOR') or hasRole('ROLE_DATA_VIEWER')"/>
     <intercept-url pattern="/xformsManifest" access="hasRole('ROLE_DATA_COLLECTOR') or hasRole('ROLE_DATA_VIEWER')"/>
+    <intercept-url pattern="/jwtAuth" access="hasRole('ROLE_DATA_COLLECTOR') or hasRole('ROLE_DATA_VIEWER') or hasRole('ROLE_DATA_OWNER')"/>
 
     <intercept-url pattern="/www/**" access="hasRole('ROLE_USER')"/>
 
@@ -199,6 +200,7 @@
               <beans:ref bean="channelProcessingFilter"/>
               <beans:ref bean="securityContextPersistenceFilter"/>
               <beans:ref bean="logoutFilter"/>
+              <beans:ref bean="jwtSign"/>
               <beans:ref bean="oauth2ResourceFilter"/>
               <beans:ref bean="oobAuthFilter"/>
               <beans:ref bean="${security.server.deviceAuthentication}AuthFilter"/>
@@ -407,7 +409,6 @@
     <beans:property name="realmName" value="${security.server.realm.realmString}"/>
   </beans:bean>
 
-
   <beans:bean id="basicAuthenticationProvider"
               class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
     <beans:property name="passwordEncoder" ref="basicAuthenticationMessageDigestPasswordEncoder"/>
@@ -432,6 +433,12 @@
         </beans:bean>
       </beans:list>
     </beans:property>
+  </beans:bean>
+
+  <!-- JWT Authentication -->
+
+  <beans:bean id="jwtSign" class="org.opendatakit.common.security.spring.JwtAuthFilter">
+    <beans:property name="userDetailsService" ref="tokenUserDetailsService"/>
   </beans:bean>
 
   <!--

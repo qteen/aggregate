@@ -33,6 +33,8 @@ public final class ParserConsts {
 
   public static final String UI_VERSION_ATTRIBUTE_NAME = "uiVersion";
 
+  public static final String ASSIGNEE_USERNAME_ATTRIBUTE_NAME = "assigneeUsername";
+
   public static final String INSTANCE_ID_ATTRIBUTE_NAME = "instanceID";
 
   public static final String SUBMISSION_DATE_ATTRIBUTE_NAME = "submissionDate";

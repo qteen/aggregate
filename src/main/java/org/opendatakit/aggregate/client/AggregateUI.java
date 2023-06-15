@@ -157,7 +157,7 @@ public class AggregateUI implements EntryPoint {
     RootPanel.get("not_secure_content").add(notSecurePanel);
     RootPanel.get("error_content").add(errorPanel);
     RootPanel.get("dynamic_content").add(
-        new HTML("<img src=\"images/odk_color.png\" id=\"odk_aggregate_logo\" class=\"gwt-Image\" />"));
+        new HTML("<img src=\"images/moda_small.png\" id=\"odk_aggregate_logo\" class=\"gwt-Image\" />"));
     RootPanel.get("dynamic_content").add(settingsBar);
     RootPanel.get("dynamic_content").add(wrappingLayoutPanel);
   }

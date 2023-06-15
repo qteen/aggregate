@@ -32,6 +32,7 @@ public class PersistConsts {
   public static final String LAST_UPDATE_URI_USER_COLUMN_NAME = "_LAST_UPDATE_URI_USER";
   public static final String CREATION_DATE_COLUMN_NAME = "_CREATION_DATE";
   public static final String CREATOR_URI_USER_COLUMN_NAME = "_CREATOR_URI_USER";
+  public static final String ASSIGNEE_USERNAME_COLUMN_NAME = "_ASSIGNEE_USERNAME";
 
   /**
    * This is the delay needed in streaming and briefcase applications to ensure

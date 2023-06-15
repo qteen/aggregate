@@ -140,7 +140,7 @@ public class MultimodeLoginPageServlet extends ServletUtilBase {
         + "<body>"
         + "<input type=\"hidden\" id=\"stale\" value=\"no\">"
         + "<table width=\"100%\" cellspacing=\"30\"><tr>"
-        + "<td align=\"LEFT\" width=\"10%\"><img src=\"odk_color.png\" id=\"odk_aggregate_logo\" /></td>"
+        + "<td align=\"LEFT\" width=\"10%\"><img src=\"images/moda_150.png\" id=\"odk_aggregate_logo\" /></td>"
         + "<td align=\"LEFT\" width=\"90%\"><font size=\"7\">Log onto Aggregate</font></td></tr></table>"
         + "<table cellspacing=\"20\">"
         + "<tr><td valign=\"top\">"

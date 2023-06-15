@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.http.HttpHeader;
 import org.kxml2.io.KXmlSerializer;
 import org.kxml2.kdom.Document;
 import org.kxml2.kdom.Element;
@@ -102,8 +104,9 @@ public class SubmissionDownloadListServlet extends ServletUtilBase {
   public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     CallingContext cc = ContextFactory.getCallingContext(this, req);
 
-    // get parameters
+    log.info("Submission List");
 
+    // get parameters
     // the formId of the form submissions to download
     String formId = getParameter(req, ServletConsts.FORM_ID);
     if (formId == null) {
@@ -124,6 +127,9 @@ public class SubmissionDownloadListServlet extends ServletUtilBase {
     if (numEntriesString != null && numEntriesString.trim().length() != 0) {
       numEntries = Integer.valueOf(numEntriesString.trim());
     }
+
+    String dataAssignee = getParameter(req, ServletConsts.DATA_ASSIGNEE);
+    String notCompletedOnly = getParameter(req, ServletConsts.NOT_COMPLETED_ONLY);
 
     IForm form;
     try {
@@ -159,6 +165,12 @@ public class SubmissionDownloadListServlet extends ServletUtilBase {
       // are fully uploaded. We snarf everything.
       Query query = cc.getDatastore().createQuery(tbl, "SubmissionDownloadListServlet.doGet", cc.getCurrentUser());
       query.addSort(tbl.lastUpdateDate, Query.Direction.ASCENDING);
+      if(dataAssignee!=null && !dataAssignee.isEmpty()) {
+        query.addFilter(tbl.assigneeUsername, FilterOperation.EQUAL, dataAssignee);
+      }
+      if(notCompletedOnly!=null && Boolean.parseBoolean(notCompletedOnly)) {
+        query.addFilter(tbl.isComplete, FilterOperation.EQUAL, false);
+      }
       boolean includeIncomplete = Optional.ofNullable(getParameter(req, "includeIncomplete"))
           .map(value -> {
             // This try block will prevent failures when we get something
@@ -174,7 +186,7 @@ public class SubmissionDownloadListServlet extends ServletUtilBase {
             }
           })
           .orElse(false);
-      if (!includeIncomplete)
+      if (!includeIncomplete && (notCompletedOnly==null || !Boolean.parseBoolean(notCompletedOnly)))
         query.addFilter(tbl.isComplete, FilterOperation.EQUAL, true);
 
       QueryResult result = query.executeQuery(cursor, numEntries);

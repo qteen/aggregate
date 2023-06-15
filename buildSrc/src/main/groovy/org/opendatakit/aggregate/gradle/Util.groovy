@@ -35,10 +35,11 @@ class Util {
   }
 
   static String getVersionName() {
-    if (Os.isFamily(Os.FAMILY_WINDOWS))
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
       "cmd /c git describe --tags --dirty --always".execute().text.trim()
-    else
+    } else {
       "git describe --tags --dirty --always".execute().text.trim()
+    }
   }
 
   static String getValue(obj, String key, String defaultValue) {

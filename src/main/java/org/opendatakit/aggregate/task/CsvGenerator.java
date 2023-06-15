@@ -24,7 +24,13 @@ import org.opendatakit.common.web.CallingContext;
 public class CsvGenerator {
   public void createCsvTask(IForm form, SubmissionKey persistentResultsKey, long attemptCount, CallingContext cc) {
     Watchdog wd = (Watchdog) cc.getBean(BeanDefs.WATCHDOG);
-    CsvWorkerImpl worker = new CsvWorkerImpl(form, persistentResultsKey, attemptCount, wd.getCallingContext());
+    CsvWorkerImpl worker = new CsvWorkerImpl(form, persistentResultsKey, attemptCount, false, wd.getCallingContext());
+    AggregrateThreadExecutor.getAggregateThreadExecutor().execute(worker::generateCsv);
+  }
+
+  public void createCsvMultipleTask(IForm form, SubmissionKey persistentResultsKey, long attemptCount, CallingContext cc) {
+    Watchdog wd = (Watchdog) cc.getBean(BeanDefs.WATCHDOG);
+    CsvWorkerImpl worker = new CsvWorkerImpl(form, persistentResultsKey, attemptCount, true, wd.getCallingContext());
     AggregrateThreadExecutor.getAggregateThreadExecutor().execute(worker::generateCsv);
   }
 }

@@ -97,6 +97,7 @@ public class QueryByUIFilterGroup extends QueryBase {
         // filtering by lastUpdateDate.
         query.addFilter(tbl.isComplete, Query.FilterOperation.EQUAL, false);
         query.addSort(tbl.isComplete, Query.Direction.ASCENDING); // gae optimization
+        query.addSort(tbl.assigneeUsername, Query.Direction.DESCENDING);
 
         // order by the last update date and filter against isComplete == false
         if (isForwardCursor) {

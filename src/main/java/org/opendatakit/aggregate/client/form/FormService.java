@@ -16,6 +16,7 @@
 
 package org.opendatakit.aggregate.client.form;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.google.gwt.user.server.rpc.XsrfProtect;
@@ -40,6 +41,9 @@ public interface FormService extends RemoteService {
 
   @XsrfProtect
   Boolean createCsvFromFilter(FilterGroup group) throws RequestFailureException, DatastoreFailureException;
+
+  @XsrfProtect
+  Boolean createCsvMultipleFromFilter(FilterGroup group) throws RequestFailureException, DatastoreFailureException;
 
   @XsrfProtect
   Boolean createJsonFileFromFilter(FilterGroup group) throws RequestFailureException, DatastoreFailureException;

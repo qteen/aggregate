@@ -167,6 +167,14 @@ public class Submission extends SubmissionSet {
     ((TopLevelDynamicBase) getGroupBackingObject()).setMarkedAsCompleteDate(value);
   }
 
+  public void setAssigneeUsername(String value) {
+    getGroupBackingObject().setAssigneeUsername(value);
+  }
+
+  public String getAssigneeUsername() {
+    return getGroupBackingObject().getAssigneeUsername();
+  }
+
   /**
    * This has 2 modes of operation. (1) If propertyNames is null, then the types
    * list of FormElementNamespace values is used to render the output. (2)

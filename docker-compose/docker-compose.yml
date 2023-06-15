@@ -7,6 +7,10 @@ services:
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d
       - ./pgdata:/var/lib/postgresql/data
+    logging:
+      options:
+        max-size: "100k"
+        max-file: "10"
 
   wait_for_db:
     image: dadarek/wait-for-dependencies
@@ -22,3 +26,7 @@ services:
       - 8080:8080
     volumes:
       - ./webapps:/usr/local/tomcat/webapps
+    logging:
+      options:
+        max-size: "100k"
+        max-file: "10"

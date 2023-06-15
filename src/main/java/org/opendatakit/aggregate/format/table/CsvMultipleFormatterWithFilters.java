@@ -15,9 +15,6 @@
  */
 package org.opendatakit.aggregate.format.table;
 
-import java.io.PrintWriter;
-import java.util.*;
-
 import org.opendatakit.aggregate.client.filter.FilterGroup;
 import org.opendatakit.aggregate.client.submission.Column;
 import org.opendatakit.aggregate.client.submission.SubmissionUISummary;
@@ -25,31 +22,33 @@ import org.opendatakit.aggregate.constants.common.FormElementNamespace;
 import org.opendatakit.aggregate.constants.format.FormatConsts;
 import org.opendatakit.aggregate.datamodel.FormElementModel;
 import org.opendatakit.aggregate.form.IForm;
-import org.opendatakit.aggregate.format.RepeatCallbackFormatter;
 import org.opendatakit.aggregate.format.Row;
 import org.opendatakit.aggregate.format.SubmissionFormatter;
-import org.opendatakit.aggregate.format.element.LinkElementFormatter;
 import org.opendatakit.aggregate.format.element.ElementFormatter;
+import org.opendatakit.aggregate.format.element.LinkElementFormatter;
 import org.opendatakit.aggregate.server.GenerateHeaderInfo;
 import org.opendatakit.aggregate.servlet.FormMultipleValueServlet;
-import org.opendatakit.aggregate.submission.Submission;
-import org.opendatakit.aggregate.submission.SubmissionRepeat;
-import org.opendatakit.aggregate.submission.SubmissionSet;
-import org.opendatakit.aggregate.submission.type.GeoPoint;
+import org.opendatakit.aggregate.submission.*;
+import org.opendatakit.aggregate.submission.type.jr.JRDateTimeType;
+import org.opendatakit.aggregate.submission.type.jr.JRTemporal;
 import org.opendatakit.common.persistence.exception.ODKDatastoreException;
 import org.opendatakit.common.web.CallingContext;
 import org.opendatakit.common.web.constants.BasicConsts;
 
-public class CsvFormatterWithFilters implements SubmissionFormatter {
+import java.io.PrintWriter;
+import java.util.*;
+
+public class CsvMultipleFormatterWithFilters implements SubmissionFormatter {
   private final IForm form;
   private final PrintWriter output;
   private ElementFormatter elemFormatter;
   private List<FormElementModel> propertyNames;
   private List<String> headers;
   private List<FormElementNamespace> namespaces;
+  private HashMap<String, List<HashMap>> csvMap = new HashMap();
 
-  public CsvFormatterWithFilters(IForm xform, String webServerUrl, PrintWriter printWriter,
-                                 FilterGroup filterGroup) {
+  public CsvMultipleFormatterWithFilters(IForm xform, String webServerUrl, PrintWriter printWriter,
+                                         FilterGroup filterGroup) {
     form = xform;
     output = printWriter;
 
@@ -77,10 +76,31 @@ public class CsvFormatterWithFilters implements SubmissionFormatter {
   @Override
   public final void processSubmissionSegment(List<Submission> submissions,
                                              CallingContext cc) throws ODKDatastoreException {
+    List<HashMap> csvMap_list = csvMap.get("ROOT");
+    if(csvMap_list==null)
+      csvMap_list = new LinkedList<HashMap>();
+
+    HashMap<String, String> hasil = new LinkedHashMap<>();
     // format row elements
     for (Submission sub : submissions) {
-      Row row = sub.getFormattedValuesAsRow(namespaces, propertyNames, elemFormatter, false, cc);
-      appendCsvRow(row.getFormattedValues().iterator());
+      hasil.clear();
+      List<SubmissionValue> submissionValues = sub.getSubmissionValues();
+      for (SubmissionValue submissionValue : submissionValues) {
+        if(submissionValue instanceof SubmissionField) {
+          Object submissionData = ((SubmissionField) submissionValue).getValue();
+          if(submissionData!=null && submissionData instanceof JRTemporal) {
+            hasil.put(submissionValue.getPropertyName(), ((JRTemporal) submissionData).getRaw());
+          } else {
+            hasil.put(submissionValue.getPropertyName(), submissionData==null?null:submissionData.toString());
+          }
+        } else if(submissionValue instanceof SubmissionRepeat){
+          SubmissionRepeat submissionRepeat = (SubmissionRepeat) submissionValue;
+          processRepeat(submissionRepeat, sub);
+        }
+      }
+
+      csvMap_list.add((HashMap) hasil.clone());
+      csvMap.put("ROOT", csvMap_list);
     }
   }
 
@@ -115,5 +135,42 @@ public class CsvFormatterWithFilters implements SubmissionFormatter {
         output.append(BasicConsts.NEW_LINE);
       }
     }
+  }
+
+  private void processRepeat(SubmissionRepeat submissionRepeat, SubmissionSet sub) {
+    List<HashMap> csvMap_repeat_list = csvMap.get(submissionRepeat.getFormElementModel().getElementName());
+    if(csvMap_repeat_list==null)
+      csvMap_repeat_list = new LinkedList<HashMap>();
+
+    HashMap<String, String> hasil_repeat = new LinkedHashMap<>();
+    List<SubmissionSet> submissionSets = submissionRepeat.getSubmissionSets();
+    for (Iterator iterator2 = submissionSets.iterator(); iterator2
+            .hasNext();) {
+      SubmissionSet submissionSet = (SubmissionSet) iterator2
+              .next();
+      hasil_repeat.clear();
+      hasil_repeat.put("uid_parent", sub.getKey().getKey());
+      hasil_repeat.put("uid", submissionSet.getKey().getKey());
+
+      List<SubmissionValue> submissionRepValues = submissionSet.getSubmissionValues();
+      for (Iterator itr = submissionRepValues.iterator(); itr
+              .hasNext();) {
+        SubmissionValue submissionRepValue = (SubmissionValue) itr
+                .next();
+        if(submissionRepValue instanceof SubmissionField) {
+          SubmissionField submissionData = (SubmissionField) submissionRepValue;
+          hasil_repeat.put(submissionData.getPropertyName(), submissionData.getValue()==null?null:submissionData.getValue().toString());
+        } else if(submissionRepValue instanceof SubmissionRepeat){
+          SubmissionRepeat submissionRepRepeat = (SubmissionRepeat) submissionRepValue;
+          processRepeat(submissionRepRepeat, submissionSet);
+        }
+      }
+      csvMap_repeat_list.add((HashMap) hasil_repeat.clone());
+      csvMap.put(submissionRepeat.getFormElementModel().getElementName(), csvMap_repeat_list);
+    }
+  }
+
+  public HashMap<String, List<HashMap>> getCsvMap() {
+    return csvMap;
   }
 }

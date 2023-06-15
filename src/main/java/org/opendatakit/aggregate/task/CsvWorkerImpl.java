@@ -15,26 +15,30 @@
  */
 package org.opendatakit.aggregate.task;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.util.Date;
-import java.util.List;
+import java.io.*;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 import org.opendatakit.aggregate.client.filter.FilterGroup;
 import org.opendatakit.aggregate.constants.ServletConsts;
 import org.opendatakit.aggregate.constants.common.ExportStatus;
 import org.opendatakit.aggregate.constants.common.UIConsts;
+import org.opendatakit.aggregate.constants.format.FormatConsts;
 import org.opendatakit.aggregate.filter.SubmissionFilterGroup;
 import org.opendatakit.aggregate.form.IForm;
 import org.opendatakit.aggregate.form.PersistentResults;
 import org.opendatakit.aggregate.format.SubmissionFormatter;
 import org.opendatakit.aggregate.format.table.CsvFormatterWithFilters;
+import org.opendatakit.aggregate.format.table.CsvMultipleFormatterWithFilters;
 import org.opendatakit.aggregate.query.submission.QueryBase;
 import org.opendatakit.aggregate.query.submission.QueryByUIFilterGroup;
 import org.opendatakit.aggregate.query.submission.QueryByUIFilterGroup.CompletionFlag;
 import org.opendatakit.aggregate.submission.Submission;
 import org.opendatakit.aggregate.submission.SubmissionKey;
+import org.opendatakit.common.persistence.exception.ODKDatastoreException;
 import org.opendatakit.common.web.CallingContext;
+import org.opendatakit.common.web.constants.BasicConsts;
 import org.opendatakit.common.web.constants.HtmlConsts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,12 +56,14 @@ public class CsvWorkerImpl {
   private final SubmissionKey persistentResultsKey;
   private final Long attemptCount;
   private final CallingContext cc;
+  private final boolean multiple;
 
   public CsvWorkerImpl(IForm form, SubmissionKey persistentResultsKey, Long attemptCount,
-                       CallingContext cc) {
+                       boolean multiple, CallingContext cc) {
     this.form = form;
     this.persistentResultsKey = persistentResultsKey;
     this.attemptCount = attemptCount;
+    this.multiple = multiple;
     this.cc = cc;
     if (attemptCount == null) {
       throw new IllegalArgumentException("attempt count cannot be null");
@@ -94,6 +100,8 @@ public class CsvWorkerImpl {
 
       query = new QueryByUIFilterGroup(form, filterGroup, CompletionFlag.ONLY_COMPLETE_SUBMISSIONS, cc);
       formatter = new CsvFormatterWithFilters(form, cc.getServerURL(), pw, filterGroup);
+      if(multiple)
+        formatter = new CsvMultipleFormatterWithFilters(form, cc.getServerURL(), pw, filterGroup);
 
       logger.info("after setup of CSV file generation for " + form.getFormId());
       formatter.beforeProcessSubmissions(cc);
@@ -110,27 +118,150 @@ public class CsvWorkerImpl {
       logger.info("wrapping up csv generation for " + form.getFormId());
       formatter.afterProcessSubmissions(cc);
 
-      // output file
-      pw.close();
-      byte[] outputFile = stream.toByteArray();
-
-      // refetch because this might have taken a while...
-      r = new PersistentResults(persistentResultsKey, cc);
-      if (attemptCount.equals(r.getAttemptCount())) {
-        logger.info("saving csv into PersistentResults table for " + form.getFormId());
-        r.setResultFile(outputFile, HtmlConsts.RESP_TYPE_CSV,
-            form.getViewableFormNameSuitableAsFileName() + ServletConsts.CSV_FILENAME_APPEND, false, cc);
-        r.setStatus(ExportStatus.AVAILABLE);
-        r.setCompletionDate(new Date());
-        if (subFilterGroup != null) {
-          subFilterGroup.delete(cc);
-        }
-        r.persist(cc);
+      if(multiple) {
+        generateMultipleCsv(formatter, pw, r, subFilterGroup);
       } else {
-        logger.warn("stale CSV activity - do not save file in PersistentResults table for " + form.getFormId());
+        // output file
+        pw.close();
+        byte[] outputFile = stream.toByteArray();
+
+        // refetch because this might have taken a while...
+        r = new PersistentResults(persistentResultsKey, cc);
+        if (attemptCount.equals(r.getAttemptCount())) {
+          logger.info("saving csv into PersistentResults table for " + form.getFormId());
+          r.setResultFile(outputFile, HtmlConsts.RESP_TYPE_CSV,
+                  form.getViewableFormNameSuitableAsFileName() + ServletConsts.CSV_FILENAME_APPEND, false, cc);
+          r.setStatus(ExportStatus.AVAILABLE);
+          r.setCompletionDate(new Date());
+          if (subFilterGroup != null) {
+            subFilterGroup.delete(cc);
+          }
+          r.persist(cc);
+        } else {
+          logger.warn("stale CSV activity - do not save file in PersistentResults table for " + form.getFormId());
+        }
       }
     } catch (Exception e) {
       failureRecovery(e);
+    }
+  }
+
+  private void generateMultipleCsv(SubmissionFormatter formatter, PrintWriter pw, PersistentResults r, SubmissionFilterGroup subFilterGroup) throws IOException, ODKDatastoreException {
+    CsvMultipleFormatterWithFilters shpFormatter = (CsvMultipleFormatterWithFilters) formatter;
+    Map<String, List<HashMap>> csvMap = shpFormatter.getCsvMap();
+    Set<String> csvNameSet = csvMap.keySet();
+    List<Map<String, Object>> listCsv = new LinkedList<Map<String, Object>>();
+    logger.info("csv count: "+csvNameSet.size());
+    for (String csvName : csvNameSet) {
+      logger.info("start generating csv: " + csvName);
+      Set max_keySet = null;
+      List<HashMap> list = csvMap.get(csvName);
+      for (Map map : list) {
+        Set keySet = map.keySet();
+        if (max_keySet == null || keySet.size() > max_keySet.size()) {
+          max_keySet = keySet;
+        }
+
+      }
+      if(max_keySet!=null) {
+        ByteArrayOutputStream streamCsv = new ByteArrayOutputStream();
+        PrintWriter pwCsv = new PrintWriter(new OutputStreamWriter(streamCsv,
+                HtmlConsts.UTF8_ENCODE));
+        pwCsv.append(BasicConsts.EMPTY_STRING);
+
+        //header
+        logger.info("header count: " + max_keySet.size());
+        for (Object aMax_keySet : max_keySet) {
+          String header = (String) aMax_keySet;
+          header = header.replaceAll(BasicConsts.QUOTE, BasicConsts.QUOTE_QUOTE);
+          pwCsv.append(BasicConsts.QUOTE).append(header).append(BasicConsts.QUOTE);
+          pwCsv.append(FormatConsts.CSV_DELIMITER);
+        }
+        pwCsv.append(BasicConsts.NEW_LINE);
+
+        list = csvMap.get(csvName);
+        logger.info("data count: " + list.size());
+        for (Iterator iterator2 = list.iterator(); iterator2.hasNext(); ) {
+          Map map = (Map) iterator2.next();
+          //value
+          Set keySet = map.keySet();
+          for (Iterator iterator3 = keySet.iterator(); iterator3
+                  .hasNext(); ) {
+            String header = (String) iterator3.next();
+            String value = (String) map.get(header);
+            if (value != null) {
+              value = value.replaceAll(BasicConsts.QUOTE, BasicConsts.QUOTE_QUOTE);
+              pwCsv.append(BasicConsts.QUOTE).append(value).append(BasicConsts.QUOTE);
+            } else {
+              pwCsv.append(BasicConsts.EMPTY_STRING);
+            }
+            pwCsv.append(FormatConsts.CSV_DELIMITER);
+          }
+          pwCsv.append(BasicConsts.NEW_LINE);
+        }
+        pwCsv.close();
+        logger.info("end generating csv: " + csvName);
+        byte[] outputFile = streamCsv.toByteArray();
+        Map<String, Object> csvFile = new HashMap<String, Object>();
+        csvFile.put("name", form.getViewableFormNameSuitableAsFileName() + "_" + csvName + ServletConsts.CSV_FILENAME_APPEND);
+        csvFile.put("content", outputFile);
+        listCsv.add(csvFile);
+        streamCsv.close();
+      }
+    }
+
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    try{
+      byte[] buffer = new byte[1024];
+      ZipOutputStream zos = new ZipOutputStream(bos);
+
+      // csv-csv
+      for (Iterator<Map<String, Object>> iterator = listCsv.iterator(); iterator
+              .hasNext();) {
+        Map<String, Object> csv = iterator.next();
+        ZipEntry zCsv = new ZipEntry((String) csv.get("name"));
+        zos.putNextEntry(zCsv);
+        ByteArrayInputStream inCsv = new ByteArrayInputStream((byte[]) csv.get("content"));
+//        FileInputStream inCsv = new FileInputStream(csv);
+        int lenCsv;
+        while ((lenCsv = inCsv.read(buffer)) > 0) {
+          zos.write(buffer, 0, lenCsv);
+        }
+        inCsv.close();
+      }
+
+      zos.closeEntry();
+      //remember close it
+      zos.close();
+
+      logger.info("Done........");
+    }catch(IOException ex){
+      ex.printStackTrace();
+    }
+
+    pw.close();
+    byte[] outputFile = bos.toByteArray();
+
+    // refetch because this might have taken a while...
+    r = new PersistentResults(persistentResultsKey, cc);
+    if (attemptCount.equals(r.getAttemptCount())) {
+      logger.info("saving Shape into PersistentResults table for "
+              + form.getFormId());
+      // set data file, nama file, type.
+      r.setResultFile(outputFile, HtmlConsts.RESP_TYPE_ZIP,
+              form.getViewableFormNameSuitableAsFileName()
+                      + ServletConsts.ZIP_FILENAME_APPEND, false, cc);
+      // set status export done
+      r.setStatus(ExportStatus.AVAILABLE);
+      // set tanggal export
+      r.setCompletionDate(new Date());
+      if (subFilterGroup != null) {
+        subFilterGroup.delete(cc);
+      }
+      r.persist(cc);
+    } else {
+      logger.warn("stale Shape activity - do not save file in PersistentResults table for "
+              + form.getFormId());
     }
   }
 

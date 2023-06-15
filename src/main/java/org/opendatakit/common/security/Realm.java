@@ -37,6 +37,7 @@ public class Realm implements InitializingBean {
   private Integer securePort;
   private String hostname;
   private String realmString;
+  private String realmSecret;
   private boolean isGaeEnvironment = false;
   private boolean checkHostnames = true;
 
@@ -136,5 +137,13 @@ public class Realm implements InitializingBean {
 
   public void setCheckHostnames(boolean checkHostnames) {
     this.checkHostnames = checkHostnames;
+  }
+
+  public String getRealmSecret() {
+    return realmSecret;
+  }
+
+  public void setRealmSecret(String realmSecret) {
+    this.realmSecret = realmSecret;
   }
 }

@@ -94,36 +94,40 @@ public class TaskLockImpl implements TaskLock {
       b.append(" (");
       first = true;
       for (DataField f : entity.getFieldList()) {
-        if (!first) {
+        if (!first && !f.equals(entity.assigneeUsername)) {
           b.append(",");
         }
-        first = false;
-        b.append(K_BQ);
-        b.append(f.getName());
-        b.append(K_BQ);
+        if(!f.equals(entity.assigneeUsername)) {
+          first = false;
+          b.append(K_BQ);
+          b.append(f.getName());
+          b.append(K_BQ);
+        }
       }
       first = true;
       b.append(") VALUES ( ");
       for (DataField f : entity.getFieldList()) {
-        if (!first) {
-          b.append(",");
-        }
-        first = false;
-        if (f.equals(entity.creationDate) || f.equals(entity.lastUpdateDate)) {
-          b.append("NOW()");
-        } else if (f.equals(entity.creatorUriUser) || f.equals(entity.lastUpdateUriUser)) {
-          b.append(uriUserInline);
-        } else if (f.equals(entity.formId)) {
-          b.append(formIdInline);
-        } else if (f.equals(entity.taskType)) {
-          b.append(taskTypeInline);
-        } else if (f.equals(entity.primaryKey)) {
-          b.append(uriLockInline);
-        } else if (f.equals(entity.expirationDateTime)) {
-          b.append(" NOW() + ");
-          b.append(lifetimeIntervalMilliseconds);
-        } else {
-          throw new IllegalStateException("unexpected case " + f.getName());
+        if(!f.equals(entity.assigneeUsername)) {
+          if (!first) {
+            b.append(",");
+          }
+          first = false;
+          if (f.equals(entity.creationDate) || f.equals(entity.lastUpdateDate)) {
+            b.append("NOW()");
+          } else if (f.equals(entity.creatorUriUser) || f.equals(entity.lastUpdateUriUser)) {
+            b.append(uriUserInline);
+          } else if (f.equals(entity.formId)) {
+            b.append(formIdInline);
+          } else if (f.equals(entity.taskType)) {
+            b.append(taskTypeInline);
+          } else if (f.equals(entity.primaryKey)) {
+            b.append(uriLockInline);
+          } else if (f.equals(entity.expirationDateTime)) {
+            b.append(" NOW() + ");
+            b.append(lifetimeIntervalMilliseconds);
+          } else {
+            throw new IllegalStateException("unexpected case " + f.getName());
+          }
         }
       }
       b.append(")");
@@ -138,29 +142,31 @@ public class TaskLockImpl implements TaskLock {
       for (DataField f : entity.getFieldList()) {
         if (f == entity.primaryKey)
           continue;
-        if (!first) {
-          b.append(",");
-        }
-        first = false;
-        b.append(K_BQ);
-        b.append(f.getName());
-        b.append(K_BQ);
-        b.append(" = ");
-        if (f.equals(entity.creationDate) || f.equals(entity.lastUpdateDate)) {
-          b.append("NOW()");
-        } else if (f.equals(entity.creatorUriUser) || f.equals(entity.lastUpdateUriUser)) {
-          b.append(uriUserInline);
-        } else if (f.equals(entity.formId)) {
-          b.append(formIdInline);
-        } else if (f.equals(entity.taskType)) {
-          b.append(taskTypeInline);
-        } else if (f.equals(entity.primaryKey)) {
-          b.append(uriLockInline);
-        } else if (f.equals(entity.expirationDateTime)) {
-          b.append(" NOW() + ");
-          b.append(lifetimeIntervalMilliseconds);
-        } else {
-          throw new IllegalStateException("unexpected case " + f.getName());
+        if(!f.equals(entity.assigneeUsername)) {
+          if (!first) {
+            b.append(",");
+          }
+          first = false;
+          b.append(K_BQ);
+          b.append(f.getName());
+          b.append(K_BQ);
+          b.append(" = ");
+          if (f.equals(entity.creationDate) || f.equals(entity.lastUpdateDate)) {
+            b.append("NOW()");
+          } else if (f.equals(entity.creatorUriUser) || f.equals(entity.lastUpdateUriUser)) {
+            b.append(uriUserInline);
+          } else if (f.equals(entity.formId)) {
+            b.append(formIdInline);
+          } else if (f.equals(entity.taskType)) {
+            b.append(taskTypeInline);
+          } else if (f.equals(entity.primaryKey)) {
+            b.append(uriLockInline);
+          } else if (f.equals(entity.expirationDateTime)) {
+            b.append(" NOW() + ");
+            b.append(lifetimeIntervalMilliseconds);
+          } else {
+            throw new IllegalStateException("unexpected case " + f.getName());
+          }
         }
       }
       b.append(" WHERE ");

@@ -20,7 +20,8 @@ import java.io.Serializable;
 
 
 public enum ExportType implements Serializable {
-  CSV("CSV file"),
+  CSV_MULTIPLE("CSV Multiple file"),
+  CSV("CSV Single file"),
   KML("KML file"),
   JSONFILE("JSON file");
 

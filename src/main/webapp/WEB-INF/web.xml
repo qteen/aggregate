@@ -262,6 +262,15 @@
 
 
   <servlet>
+    <servlet-name>jwtAuth</servlet-name>
+    <servlet-class>org.opendatakit.aggregate.servlet.JwtAuthServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>jwtAuth</servlet-name>
+    <url-pattern>/jwtAuth</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
     <servlet-name>xformsManifest</servlet-name>
     <servlet-class>org.opendatakit.aggregate.servlet.XFormsManifestServlet</servlet-class>
   </servlet>

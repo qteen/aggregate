@@ -80,6 +80,8 @@ public final class ServletConsts {
 
   public static final String JSON_FILENAME_APPEND = "_results.json";
 
+  public static final String ZIP_FILENAME_APPEND = "_results.zip";
+
   public static final String RECORD_KEY = "record";
 
   public static final int EXPORT_CURSOR_CHUNK_SIZE = 100;
@@ -109,4 +111,6 @@ public final class ServletConsts {
 
   public static final String AGGREGATE_STYLE = "AggregateUI.css";
 
+  public static final String DATA_ASSIGNEE = "dataAssignee";
+  public static final String NOT_COMPLETED_ONLY = "notCompletedOnly";
 }

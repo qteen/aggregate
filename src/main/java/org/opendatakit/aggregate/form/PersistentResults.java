@@ -51,7 +51,7 @@ import org.opendatakit.common.web.constants.BasicConsts;
  * @author mitchellsundt@gmail.com
  */
 public class PersistentResults {
-  public static final long RETRY_INTERVAL_MILLISECONDS = (11 * 60) * 1000; // 11 minutes
+  public static final long RETRY_INTERVAL_MILLISECONDS = (30 * 60) * 1000; // 30 minutes
   public static final long MAX_RETRY_ATTEMPTS = 3;
 
   public static final String FORM_ID_PERSISTENT_RESULT = "aggregate.opendatakit.org:PersistentResults";

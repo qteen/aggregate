@@ -223,6 +223,64 @@ public class FormServiceImpl extends RemoteServiceServlet implements
   }
 
   @Override
+  public Boolean createCsvMultipleFromFilter(FilterGroup group) throws RequestFailureException, DatastoreFailureException {
+    HttpServletRequest req = this.getThreadLocalRequest();
+    CallingContext cc = ContextFactory.getCallingContext(this, req);
+
+    try {
+      FormActionStatusTimestamp deletionTimestamp = MiscTasks
+              .getFormDeletionStatusTimestampOfFormId(group.getFormId(), cc);
+      // Form is being deleted. Disallow exports.
+      if (deletionTimestamp != null) {
+        throw new RequestFailureException("Form is marked for deletion - csv export request aborted.");
+      }
+
+      // clear uri so a copy can be saved
+      group.resetUriToDefault();
+
+      // save the filter group
+      SubmissionFilterGroup filterGrp = SubmissionFilterGroup.transform(
+              group, cc);
+      filterGrp.setName("FilterForExport-" + filterGrp.getName());
+      filterGrp.setIsPublic(false); // make the filter not visible in the
+      // UI since it's an internal filter
+      // for export
+      filterGrp.persist(cc);
+
+      // create csv job
+      IForm form = FormFactory.retrieveFormByFormId(
+              filterGrp.getFormId(), cc);
+      if (!form.hasValidFormDefinition()) {
+        throw new RequestFailureException(
+                ErrorConsts.FORM_DEFINITION_INVALID); // ill-formed
+        // definition
+      }
+      PersistentResults r = new PersistentResults(ExportType.CSV_MULTIPLE, form,
+              filterGrp, null, cc);
+      r.persist(cc);
+
+      // create csv task
+      CallingContext ccDaemon = ContextFactory.getCallingContext(this,
+              req);
+      ccDaemon.setAsDaemon(true);
+      CsvGenerator generator = (CsvGenerator) cc
+              .getBean(BeanDefs.CSV_BEAN);
+      generator.createCsvMultipleTask(form, r.getSubmissionKey(), 1L, ccDaemon);
+      return true;
+
+    } catch (ODKFormNotFoundException e) {
+      e.printStackTrace();
+      throw new FormNotAvailableException(e);
+    } catch (ODKOverQuotaException e) {
+      e.printStackTrace();
+      throw new RequestFailureException(ErrorConsts.QUOTA_EXCEEDED);
+    } catch (ODKDatastoreException e) {
+      e.printStackTrace();
+      throw new DatastoreFailureException();
+    }
+  }
+
+  @Override
   public Boolean createCsvFromFilter(FilterGroup group) throws RequestFailureException, DatastoreFailureException {
     HttpServletRequest req = this.getThreadLocalRequest();
     CallingContext cc = ContextFactory.getCallingContext(this, req);

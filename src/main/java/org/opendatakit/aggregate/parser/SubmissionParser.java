@@ -30,6 +30,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.opendatakit.aggregate.constants.ParserConsts;
 import org.opendatakit.aggregate.constants.ServletConsts;
 import org.opendatakit.aggregate.datamodel.FormElementModel;
@@ -227,6 +228,7 @@ public class SubmissionParser {
 
     String modelVersionString = root.getAttribute(ParserConsts.MODEL_VERSION_ATTRIBUTE_NAME);
     String uiVersionString = root.getAttribute(ParserConsts.UI_VERSION_ATTRIBUTE_NAME);
+    String assigneeUsernameString = root.getAttribute(ParserConsts.ASSIGNEE_USERNAME_ATTRIBUTE_NAME);
     Long modelVersion = null;
     Long uiVersion = null;
     if (modelVersionString != null && modelVersionString.length() > 0) {
@@ -236,9 +238,9 @@ public class SubmissionParser {
       uiVersion = Long.valueOf(uiVersionString);
     }
 
-    String instanceId = getOpenRosaInstanceId();
-    if (instanceId == null) {
-      instanceId = root.getAttribute(ParserConsts.INSTANCE_ID_ATTRIBUTE_NAME);
+    String instanceId = root.getAttribute(ParserConsts.INSTANCE_ID_ATTRIBUTE_NAME);
+    if (StringUtils.isEmpty(instanceId)) {
+      instanceId = getOpenRosaInstanceId();
       if (instanceId == null || instanceId.length() == 0) {
         instanceId = CommonFieldsBase.newUri();
       }
@@ -288,11 +290,13 @@ public class SubmissionParser {
           }
           throw e;
         }
-        preExisting = true;
+        preExisting = !StringUtils.isEmpty(root.getAttribute(ParserConsts.INSTANCE_ID_ATTRIBUTE_NAME))?root.getAttribute(ParserConsts.INSTANCE_ID_ATTRIBUTE_NAME).equals(instanceId):false;;
         preExistingComplete = submission.isComplete();
       } catch (ODKEntityNotFoundException e) {
         submission = new Submission(modelVersion, uiVersion, instanceId, form, submissionDate, cc);
       }
+      if(!assigneeUsernameString.isEmpty())
+        submission.setAssigneeUsername(assigneeUsernameString);
 
       topLevelTableKey = submission.getKey();
 
@@ -300,9 +304,9 @@ public class SubmissionParser {
       FormElementModel formRoot = form.getTopLevelGroupElement();
       // if the submission is pre-existing in the datastore, ONLY update binaries
       boolean uploadAllBinaries = processSubmissionElement(formRoot, root, submission,
-          repeatGroupIndices, preExisting, cc);
-      submission.setIsComplete(uploadAllBinaries);
-      if (uploadAllBinaries) {
+          repeatGroupIndices, preExisting && submission.getAssigneeUsername()==null, cc);
+      submission.setIsComplete(uploadAllBinaries && assigneeUsernameString.isEmpty());
+      if (uploadAllBinaries && assigneeUsernameString.isEmpty()) {
         submission.setMarkedAsCompleteDate(markedAsCompleteDate);
       }
       // save the elements inserted into the top-level submission

@@ -145,12 +145,19 @@ public final class ExportPopup extends AbstractPopupBase {
         return;
       }
 
-      if (type == ExportType.CSV) {
+      if (type == ExportType.CSV_MULTIPLE) {
         secureRequest(
             SecureGWT.getFormService(),
-            (rpc, sc, cb) -> rpc.createCsvFromFilter(filterGroup, cb),
+            (rpc, sc, cb) -> rpc.createCsvMultipleFromFilter(filterGroup, cb),
             this::onSuccess,
             this::onFailure
+        );
+      } else if (type == ExportType.CSV) {
+        secureRequest(
+                SecureGWT.getFormService(),
+                (rpc, sc, cb) -> rpc.createCsvFromFilter(filterGroup, cb),
+                this::onSuccess,
+                this::onFailure
         );
       } else if (type == ExportType.JSONFILE) {
         secureRequest(

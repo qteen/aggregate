@@ -109,7 +109,10 @@ public class GeoPoint {
 
   @Override
   public String toString() {
-    String str = GeoPoint.GEO_POINT + BasicConsts.COLON + BasicConsts.SPACE;
+    String str = "";
+    if(latitude != null || longitude!=null) {
+      str = GeoPoint.GEO_POINT + BasicConsts.COLON + BasicConsts.SPACE;
+    }
     if (latitude != null) {
       str += GeoPoint.LATITUDE + BasicConsts.COLON + latitude + BasicConsts.SPACE;
     }

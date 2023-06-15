@@ -44,6 +44,7 @@ public abstract class CommonFieldsBase {
   public static final String LAST_UPDATE_URI_USER_COLUMN_NAME = PersistConsts.LAST_UPDATE_URI_USER_COLUMN_NAME;
   public static final String CREATION_DATE_COLUMN_NAME = PersistConsts.CREATION_DATE_COLUMN_NAME;
   public static final String CREATOR_URI_USER_COLUMN_NAME = PersistConsts.CREATOR_URI_USER_COLUMN_NAME;
+  public static final String ASSIGNEE_USERNAME_COLUMN_NAME = PersistConsts.ASSIGNEE_USERNAME_COLUMN_NAME;
 
   /* standard audit fields */
 
@@ -52,6 +53,9 @@ public abstract class CommonFieldsBase {
    */
   private static final DataField CREATOR_URI_USER = new DataField(CREATOR_URI_USER_COLUMN_NAME,
       DataField.DataType.URI, false, PersistConsts.URI_STRING_LEN);
+  /** assignee */
+  private static final DataField ASSIGNEE_USERNAME = new DataField(ASSIGNEE_USERNAME_COLUMN_NAME,
+          DataField.DataType.URI, true, PersistConsts.URI_STRING_LEN);
   /**
    * creation date
    */
@@ -75,6 +79,7 @@ public abstract class CommonFieldsBase {
       false, PersistConsts.URI_STRING_LEN).setIndexable(IndexType.HASH);
   public final DataField primaryKey;
   public final DataField creatorUriUser;
+  public final DataField assigneeUsername;
   public final DataField creationDate;
   public final DataField lastUpdateUriUser;
   public final DataField lastUpdateDate;
@@ -96,6 +101,7 @@ public abstract class CommonFieldsBase {
 
     // and add audit fields everywhere...
     fieldList.add(creatorUriUser = new DataField(CREATOR_URI_USER));
+    fieldList.add(assigneeUsername = new DataField(ASSIGNEE_USERNAME));
     fieldList.add(creationDate = new DataField(CREATION_DATE));
     fieldList.add(lastUpdateUriUser = new DataField(LAST_UPDATE_URI_USER));
     fieldList.add(lastUpdateDate = new DataField(LAST_UPDATE_DATE));
@@ -107,6 +113,7 @@ public abstract class CommonFieldsBase {
 
     primaryKey = ref.primaryKey;
     creatorUriUser = ref.creatorUriUser;
+    assigneeUsername = ref.assigneeUsername;
     creationDate = ref.creationDate;
     lastUpdateUriUser = ref.lastUpdateUriUser;
     lastUpdateDate = ref.lastUpdateDate;
@@ -185,6 +192,14 @@ public abstract class CommonFieldsBase {
 
   public final String getCreatorUriUser() {
     return getStringField(creatorUriUser);
+  }
+
+  public final String getAssigneeUsername() {
+    return getStringField(assigneeUsername);
+  }
+
+  public final void setAssigneeUsername(String assigneeUsername) {
+    setStringField(this.assigneeUsername, assigneeUsername);
   }
 
   public final Date getCreationDate() {

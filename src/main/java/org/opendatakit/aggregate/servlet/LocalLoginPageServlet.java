@@ -79,7 +79,7 @@ public class LocalLoginPageServlet extends ServletUtilBase {
         + "</head>"
         + "<body onLoad=\"setTimeout('redirector()', 1000)\">"
         + "<table width=\"100%\" cellspacing=\"30\"><tr>"
-        + "<td align=\"LEFT\" width=\"10%\"><img src=\"odk_color.png\" id=\"odk_aggregate_logo\" /></td>"
+        + "<td align=\"LEFT\" width=\"10%\"><img src=\"images/moda_150.png\" id=\"odk_aggregate_logo\" /></td>"
         + "<td align=\"LEFT\" width=\"90%\"><font size=\"7\">Successful Login</font></td></tr></table>"
         + "Please click "
         + "<script type=\"text/javascript\">"

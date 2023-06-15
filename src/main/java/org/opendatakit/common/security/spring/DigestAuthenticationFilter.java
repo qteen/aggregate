@@ -20,6 +20,8 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
@@ -31,12 +33,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class DigestAuthenticationFilter extends org.springframework.security.web.authentication.www.DigestAuthenticationFilter {
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+  public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
       throws IOException, ServletException {
     if (SecurityContextHolder.getContext().getAuthentication() == null) {
-      super.doFilter(request, response, chain);
+      super.doFilter(req, res, chain);
     } else {
-      chain.doFilter(request, response);
+      chain.doFilter(req, res);
     }
   }
 
