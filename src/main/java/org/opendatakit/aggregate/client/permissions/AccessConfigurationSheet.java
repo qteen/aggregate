@@ -220,7 +220,7 @@ public class AccessConfigurationSheet extends Composite {
 
     List<String> existingUsernames = dataProvider.getList().stream().map(UserSecurityInfo::getUsername).collect(Collectors.toList());
     List<UserSecurityInfo> newAccounts = new ArrayList<>();
-    for (String username : addedUsers.getText().split(" \n")) {
+    for (String username : addedUsers.getText().split("(\r\n|\r|\n)")) {
       String trimmedUsername = username.trim();
       if (!trimmedUsername.isEmpty() && !existingUsernames.contains(trimmedUsername))
         newAccounts.add(new UserSecurityInfo(trimmedUsername, null, null, UserType.REGISTERED));

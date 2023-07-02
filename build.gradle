@@ -24,7 +24,7 @@ apply from: 'https://raw.githubusercontent.com/akhikhl/gretty/master/pluginScrip
 apply plugin: 'docker-compose'
 
 group = 'org.opendatakit'
-version = "2.0.5.3" //getVersionName()
+version = "2.0.5.4" //getVersionName()
 description = "Moda Aggregate Server"
 
 sourceCompatibility = 1.8
@@ -160,10 +160,11 @@ war {
 
 gretty {
   contextPath = '/'
-//  host = '192.168.1.8'
+//  host = '192.168.1.16'
   host = '192.168.0.10'
 //  host = '192.168.50.1'
 //  host = '192.168.0.14'
+//  host = '192.168.193.134'
   httpPort = 8081
   httpsPort = 8446
   logDir = 'logs'
