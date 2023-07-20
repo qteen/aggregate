@@ -68,7 +68,7 @@ public class BackendActionsTable extends CommonFieldsBase {
   /**
    * delay between watchdog sweeps when there are no active tasks. 15 minutes.
    */
-  public static final long IDLING_WATCHDOG_RETRY_INTERVAL_MILLISECONDS = 15L * 60000L;
+  public static final long IDLING_WATCHDOG_RETRY_INTERVAL_MILLISECONDS = 5L * 60000L;
   private static final String WATCHDOG_SCHEDULING_ROW_ID = "rid:watchdog_scheduling";
   private static final String WATCHDOG_ENQUEUE_ROW_ID = "rid:watchdog_enqueue";
   private static final String WATCHDOG_START_ROW_ID = "rid:watchdog_start";
