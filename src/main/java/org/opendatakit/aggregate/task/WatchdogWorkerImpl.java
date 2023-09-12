@@ -126,7 +126,6 @@ public class WatchdogWorkerImpl {
   }
 
   private boolean checkFormServiceCursors(UploadSubmissions uploadSubmissions, CallingContext cc) throws ODKExternalServiceException, ODKFormNotFoundException, ODKDatastoreException {
-
     Date olderThanDate = new Date(System.currentTimeMillis()
         - BackendActionsTable.PUBLISHING_DELAY_MILLISECONDS);
     List<FormServiceCursor> fscList = FormServiceCursor.queryFormServiceCursorRelation(
